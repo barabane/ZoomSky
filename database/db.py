@@ -2,6 +2,7 @@ import os
 from loguru import logger
 from mysql.connector import connect, Error
 
+
 class DataBase:
     def __init__(self) -> None:
         self.conn = connect(
@@ -20,7 +21,8 @@ class DataBase:
                     username VARCHAR(100),
                     reg_date DATE,
                     city_name VARCHAR(200),
-                    coordinates TEXT              
+                    coordinates TEXT,
+                    subscribe INT           
                 )""")
             logger.info('DB successfully connected!')
         except Error as e:
@@ -28,20 +30,26 @@ class DataBase:
 
     def update_user(self, user):
         user_exists = self.get_user(user['id'])
-        
+
         if user_exists:
-            self.curr.execute("UPDATE user SET id = %s, username = %s, city_name = %s,coordinates = %s", 
-                        (user['id'], user['username'], user['city_name'], user['coordinates']))
+            self.curr.execute("UPDATE user SET id = %s, username = %s, city_name = %s,coordinates = %s",
+                              (user['id'], user['username'], user['city_name'], user['coordinates']))
             self.conn.commit()
             return
-        
-        self.curr.execute("INSERT INTO user (id,username,reg_date,city_name,coordinates) VALUES (%s,%s,%s,%s,%s)", 
-                        (user['id'], user['username'], user['reg_date'], user['city_name'], user['coordinates']))
+
+        self.curr.execute("INSERT INTO user (id,username,reg_date,city_name,coordinates) VALUES (%s,%s,%s,%s,%s)",
+                          (user['id'], user['username'], user['reg_date'], user['city_name'], user['coordinates']))
         self.conn.commit()
-        
+
     def get_user(self, id: int):
         self.curr.execute(f"SELECT * FROM user WHERE id={id}")
-        
+
         return self.curr.fetchone()
-    
+
+    def subscribe_to_notifi(self, user_id: int):
+        self.curr.execute(
+            f"UPDATE user SET subscribe = 1 WHERE id = {user_id}")
+        self.conn.commit()
+
+
 db = DataBase()
